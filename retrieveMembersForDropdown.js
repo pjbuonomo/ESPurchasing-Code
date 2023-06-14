@@ -36,6 +36,13 @@ function retrieveGroupMembers() {
 
       // Append the dropdown to a container element with its own ID
       const dropdownContainer = document.getElementById("dropdownContainer");
+
+      // Clear previous dropdown if it exists
+      const previousDropdown = document.getElementById("assignedToDropdown");
+      if (previousDropdown) {
+        dropdownContainer.removeChild(previousDropdown);
+      }
+
       dropdownContainer.appendChild(assignedToDropdown);
     })
     .catch(error => {
