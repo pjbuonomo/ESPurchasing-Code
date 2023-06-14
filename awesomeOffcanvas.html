@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    .list-form-container-root {
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      overflow: unset;
+    }
+
+    .list-form-client--withRightPane {
+      width: calc(100% - 24px - 24px - 320px);
+    }
+
+    .list-form-client {
+      padding: 12px 24px 18px;
+      overflow-y: auto;
+      max-height: calc(100% - 44px - 12px - 18px - 1px);
+    }
+
+    .list-form-wrapper {
+      position: relative;
+      width: calc(100% - 24px - 24px);
+      height: calc(100% - 44px - 12px - 18px - 1px);
+    }
+
+    .list-form-activity-pane {
+      width: 320px;
+      display: none;
+      bottom: 0;
+      border-left: solid 1px #d2d0ce;
+      top: 44px;
+    }
+
+    .Files-rightPane {
+      position: absolute;
+      background: #ffffff;
+      bottom: 0;
+      box-sizing: border-box;
+      -webkit-overflow-scrolling: touch;
+      transition: 367ms cubic-bezier(.1, .9, .2, 1);
+      right: 0;
+    }
+
+    .list-form-activity-pane-root {
+      height: 100%;
+      background-color: #f3f2f1;
+      overflow-y: auto;
+    }
+
+    .open-panel-button {
+      border: none;
+      background-color: transparent;
+      color: red;
+      font-size: 20px;
+      line-height: 1;
+      padding: 0;
+      margin-left: 5px;
+      cursor: pointer;
+      
+    }
+
+    .open-panel-button.active {
+      background-color: gray;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <button type="button" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu">Open Menu</button>
+
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasMenu" style="width: 800px;">
+    <div id="entireOffcanvasWrapper" class="list-form-container-root">
+      <div class="offcanvas-header od-ListForm-topBar od-TopBar-item od-TopBar-commandBar od-BasePage-commandBar">
+        <h5 class="offcanvas-title">Menu</h5>
+        <button type="button" class="btn btn-secondary open-panel-button" id="openPanelButton">
+          <i class="fas fa-comment"></i>
+        </button>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="list-form-wrapper list-form-client list-form-client--withRightPane">
+        <div class="od-ListForm-root">
+          <div class="placeholder-for-data">
+            <h1>Welcome to the Offcanvas Menu</h1>
+            <p>This is the content inside the offcanvas menu.</p>
+            <p>You can add any desired content here.</p>
+          </div>
+        </div>
+      </div>
+      <div class="Files-rightPane list-form-activity-pane">
+        <div class="list-form-activity-pane-root">
+          <h2>Right Panel Content</h2>
+          <p>This is the content inside the right panel.</p>
+          <p>You can add any desired content here.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      $('#openPanelButton').click(function() {
+        $('.list-form-activity-pane').toggle();
+        $(this).toggleClass('active');
+        adjustLeftPanelSize();
+      });
+
+      $(window).resize(function() {
+        adjustLeftPanelSize();
+      });
+
+      function adjustLeftPanelSize() {
+        var rightPanelVisible = $('.list-form-activity-pane').is(':visible');
+        var leftPanelWidth = rightPanelVisible ? 'calc(100% - 24px - 24px - 320px)' : 'calc(100% - 24px - 24px)';
+        $('.list-form-client--withRightPane').css('width', leftPanelWidth);
+      }
+    });
+  </script>
+</body>
+</html>
