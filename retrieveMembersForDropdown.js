@@ -1,4 +1,4 @@
-function retrieveGroupMembers() {
+function retrieveGroupMembers(initialValue) {
   const siteUrl = "https://sp.bbh.com/sites/ESPurchasing";
   const groupId = 7;
 
@@ -20,20 +20,19 @@ function retrieveGroupMembers() {
       // Create the dropdown and assign options
       const assignedToDropdown = document.createElement("select");
       assignedToDropdown.id = "assignedToDropdown";
-
-      // Set default value of dropdown based on initial input value (display name)
-      const initialValue = document.querySelector("span.dataQuickLocate[data-internalName='AssignedToId'] input").value;
-      const initialOption = Array.from(assignedToDropdown.options).find(option => option.text === initialValue);
-      if (initialOption) {
-        initialOption.selected = true;
-      }
-
+      
       members.forEach(member => {
         const option = document.createElement("option");
         option.value = member.userId;
         option.text = member.name;
         assignedToDropdown.appendChild(option);
       });
+
+      // Set default value of dropdown based on initial input value (display name)
+      const initialOption = Array.from(assignedToDropdown.options).find(option => option.text === initialValue);
+      if (initialOption) {
+        initialOption.selected = true;
+      }
 
       // Set event listener for the dropdown change
       assignedToDropdown.addEventListener("change", () => {
@@ -58,4 +57,8 @@ function retrieveGroupMembers() {
     });
 }
 
-retrieveGroupMembers();
+// Call retrieveGroupMembers() with the initial value when opening the offcanvas menu
+function openOffcanvas() {
+  const initialValue = document.querySelector("span.dataQuickLocate[data-internalName='AssignedToId'] input").value;
+  retrieveGroupMembers(initialValue);
+}
