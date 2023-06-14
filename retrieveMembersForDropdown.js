@@ -32,13 +32,13 @@ function retrieveGroupMembers() {
         const selectedOption = assignedToDropdown.options[assignedToDropdown.selectedIndex];
 
         // Get the selected option value (user ID) and update the field
-        const fieldElement = document.querySelector("span.dataQuickLocate[data-internalName='AssignedTo']");
+        const fieldElement = document.getElementById("assignedToField");
         fieldElement.innerText = selectedOption.value;
       });
 
       // Append the dropdown to the desired element
-      const fieldContainer = document.querySelector("span.dataQuickLocate[data-internalName='AssignedTo']");
-      fieldContainer.appendChild(assignedToDropdown);
+      const dropdownContainer = document.getElementById("assignedToDropdownContainer");
+      dropdownContainer.appendChild(assignedToDropdown);
     })
     .catch(error => {
       console.log("Error retrieving group members:", error);
