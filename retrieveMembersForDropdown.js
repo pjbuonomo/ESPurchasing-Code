@@ -28,8 +28,8 @@ function retrieveGroupMembers(initialValue) {
         assignedToDropdown.appendChild(option);
       });
 
-      // Set default value of dropdown based on initial input value (display name)
-      const initialOption = Array.from(assignedToDropdown.options).find(option => option.text === initialValue);
+      // Set default value of dropdown based on initial input value (userId)
+      const initialOption = Array.from(assignedToDropdown.options).find(option => option.value === initialValue);
       if (initialOption) {
         initialOption.selected = true;
       }
