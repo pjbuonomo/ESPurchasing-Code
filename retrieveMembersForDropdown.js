@@ -20,6 +20,14 @@ function retrieveGroupMembers() {
       // Create the dropdown and assign options
       const assignedToDropdown = document.createElement("select");
       assignedToDropdown.id = "assignedToDropdown";
+
+      // Set default value of dropdown based on initial input value (display name)
+      const initialValue = document.querySelector("span.dataQuickLocate[data-internalName='AssignedToId'] input").value;
+      const initialOption = Array.from(assignedToDropdown.options).find(option => option.text === initialValue);
+      if (initialOption) {
+        initialOption.selected = true;
+      }
+
       members.forEach(member => {
         const option = document.createElement("option");
         option.value = member.userId;
