@@ -30,14 +30,12 @@ function retrieveGroupMembers() {
       // Set event listener for the dropdown change
       assignedToDropdown.addEventListener("change", () => {
         const selectedOption = assignedToDropdown.options[assignedToDropdown.selectedIndex];
-
-        // Get the selected option value (user ID) and update the field
-        const fieldElement = document.getElementById("assignedToField");
-        fieldElement.innerText = selectedOption.value;
+        const inputElement = document.querySelector("span.dataQuickLocate[data-internalName='AssignedTo'] input");
+        inputElement.value = selectedOption.value;
       });
 
-      // Append the dropdown to the desired element
-      const dropdownContainer = document.getElementById("assignedToDropdownContainer");
+      // Append the dropdown to a container element with its own ID
+      const dropdownContainer = document.getElementById("dropdownContainer");
       dropdownContainer.appendChild(assignedToDropdown);
     })
     .catch(error => {
