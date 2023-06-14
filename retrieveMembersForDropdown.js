@@ -17,7 +17,7 @@ function retrieveGroupMembers() {
         };
       });
 
-      // Populate the dropdown with user display names
+      // Create the dropdown and assign options
       const assignedToDropdown = document.createElement("select");
       assignedToDropdown.id = "assignedToDropdown";
       members.forEach(member => {
