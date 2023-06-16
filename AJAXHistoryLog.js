@@ -201,9 +201,9 @@ $(document).ready(function() {
   });
 });
 
-  /* Call populateActivityLog when page loads */
-  // Removed this because it's already called once we fetch the current user successfully
-});
+
+
+
 
 
 
