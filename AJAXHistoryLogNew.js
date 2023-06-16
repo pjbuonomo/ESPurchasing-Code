@@ -1,9 +1,9 @@
-$(document).ready(function() {
+$(document).ready(function () {
     /* Global variable declaration */
     let currentUser;
     let listName = "PurchaseRequests";
     let siteUrl = "https://sp.bbh.com/sites/ESPurchasing";
-  
+    
     /* Fetching current user's information from SharePoint */
     $.ajax({
       url: siteUrl + "/_api/web/currentuser",
@@ -20,7 +20,7 @@ $(document).ready(function() {
         console.error('Request failed. ' + JSON.stringify(error));
       }
     });
-  
+    
     /* Function to create an activity card */
     function createCard(type, user, content, timestamp) {
       let activityType, activityIcon;
@@ -67,13 +67,16 @@ $(document).ready(function() {
         </div>`;
       return card;
     }
-  
+    
     /* Function to add a new comment */
     function addComment(comment) {
       let timestamp = new Date().toLocaleString();
+      let username = currentUser;
+      let currentUserId = _spPageContextInfo.userId; // Get current user's ID
       let currentItemID = getQueryStringParameter("ID");
-      let newCard = createCard("comment", currentUser, comment, timestamp);
+      let newCard = createCard("comment", username, comment, timestamp);
       $("#ActivityLog").append(newCard);
+      
       $.ajax({
         url: siteUrl + "/_api/web/lists/GetByTitle('" + listName + "')/items(" + currentItemID + ")",
         type: "POST",
@@ -81,11 +84,13 @@ $(document).ready(function() {
           '__metadata': {
             'type': 'SP.Data.' + listName + 'ListItem'
           },
-          'HistoryLog': comment,
+          'HistoryLog': {
+            '__metadata': { 'type': 'SP.FieldLookupValue' },
+            'LookupId': currentUserId
+          },
           'NewComment1': comment,
-          'CommentingUser1Id': currentUser.Id,
-          'IsSendMessageToRequestor': currentUser.Id !== currentItemID, // Adjust according to your logic
-          'IsSendMessageToAgent': currentUser.Id === currentItemID // Adjust according to your logic
+          'IsSendMessageToRequestor': currentUserId !== currentItemID, // Adjust according to your logic
+          'IsSendMessageToAgent': currentUserId === currentItemID // Adjust according to your logic
         }),
         headers: {
           "X-RequestDigest": $("#__REQUESTDIGEST").val(),
@@ -102,7 +107,7 @@ $(document).ready(function() {
         }
       });
     }
-  
+    
     /* Function to get query string parameter */
     function getQueryStringParameter(name) {
       name = name.replace(/[\[\]]/g, '\\$&');
@@ -112,43 +117,102 @@ $(document).ready(function() {
       if (!results[2]) return '';
       return decodeURIComponent(results[2].replace(/\+/g, ' '));
     }
-  
+    
     /* Function to populate activity log when page loads */
     function populateActivityLog() {
-        let currentItemID = getQueryStringParameter("ID");
-        $.ajax({
-          url: siteUrl + "/_api/web/lists/GetByTitle('" + listName + "')/items(" + currentItemID + ")?$select=HistoryLog,Author/Id,Author/Title&$expand=Author",
-          method: "GET",
-          headers: {
-            "Accept": "application/json; odata=verbose"
-          },
-          success: function(data) {
-            let commentHistory = data.d.HistoryLog;
-            if (commentHistory) {
-              let regex = /(.+?) \((.+?)\):\s*(.+)/g;
-              let match;
-              while ((match = regex.exec(commentHistory)) !== null) {
-                let user = match[1];
-                let timestamp = match[2];
-                let content = match[3];
+      let currentItemID = getQueryStringParameter("ID");
+      
+      $.ajax({
+        url: siteUrl + "/_api/web/lists/GetByTitle('" + listName + "')/items(" + currentItemID + ")?$select=HistoryLog,Author/Title&$expand=Author",
+        method: "GET",
+        headers: {
+          "Accept": "application/json; odata=verbose"
+        },
+        success: function(data) {
+          let commentHistory = data.d.HistoryLog;
+          if (commentHistory) {
+            let comments = commentHistory.results;
+            comments.forEach(function(comment) {
+              let user, timestamp, content;
+              let userEndIndex = comment.Author.Title.indexOf(' (');
+              if (userEndIndex !== -1) {
+                user = comment.Author.Title.substring(0, userEndIndex);
+              }
+              let timestampStartIndex = comment.HistoryLog.indexOf('(');
+              let timestampEndIndex = comment.HistoryLog.indexOf(')');
+              if (timestampStartIndex !== -1 && timestampEndIndex !== -1) {
+                timestamp = comment.HistoryLog.substring(timestampStartIndex + 1, timestampEndIndex);
+              }
+              let commentStartIndex = comment.HistoryLog.indexOf('):');
+              if (commentStartIndex !== -1) {
+                content = comment.HistoryLog.substring(commentStartIndex + 2).trim();
+              }
+              if (user && timestamp && content) {
                 let newCard = createCard("comment", user, content, timestamp);
                 $("#ActivityLog").prepend(newCard);
               }
-            }
-          },
-          error: function(error) {
-            console.error('Request failed. ' + JSON.stringify(error));
+            });
           }
-        });
-      }
-  
+        },
+        error: function(error) {
+          console.error('Request failed. ' + JSON.stringify(error));
+        }
+      });
+    }
+    
     /* Binding click event to the comment button */
-    $("#addCommentButton").on("click", function() {
+    $("#addCommentButton").on("click", function () {
       let comment = $(".form-control").val();
       if (comment) {
         addComment(comment);
         $(".form-control").val('');
       }
     });
+    
+    /* Call populateActivityLog when page loads */
+    populateActivityLog();
   });
+  
+  function clearHistoryLogForAllItems(listName) {
+    let siteUrl = "https://sp.bbh.com/sites/ESPurchasing";
+    
+    $.ajax({
+      url: siteUrl + "/_api/web/lists/GetByTitle('" + listName + "')/items",
+      method: "GET",
+      headers: {
+        "Accept": "application/json; odata=verbose"
+      },
+      success: function(data) {
+        let items = data.d.results;
+        let requests = [];
+        items.forEach(function(item) {
+          let request = $.ajax({
+            url: item.__metadata.uri,
+            type: "POST",
+            data: JSON.stringify({
+              '__metadata': { 'type': 'SP.Data.' + listName + 'ListItem' },
+              'HistoryLog': ''
+            }),
+            headers: {
+              "X-RequestDigest": $("#__REQUESTDIGEST").val(),
+              "accept": "application/json;odata=verbose",
+              "IF-MATCH": "*",
+              "content-type": "application/json;odata=verbose",
+              "X-HTTP-Method": "MERGE"
+            }
+          });
+          requests.push(request);
+        });
+        
+        $.when.apply($, requests).done(function() {
+          console.log("HistoryLog cleared for all items successfully.");
+        }).fail(function(error) {
+          console.error("Request failed. " + JSON.stringify(error));
+        });
+      },
+      error: function(error) {
+        console.error('Request failed. ' + JSON.stringify(error));
+      }
+    });
+  }
   
