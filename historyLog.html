@@ -1,0 +1,149 @@
+<div class="container card" style="background-color: #F3F1F1 !important; width: 320px;"> 
+    <div class="row my-2"> 
+        <div class="dropdown"> 
+            <button class="btn btn-lg dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"> 
+                Activity Log 
+            </button> 
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1"> 
+                <li><a class="dropdown-item" href="#">View only comments</a></li> 
+                <li><a class="dropdown-item" href="#">All activity</a></li> 
+            </ul> 
+        </div> 
+    </div> 
+    <div class="row my-2"> 
+        <div class="input-group mb-3"> 
+            <input type="text" class="form-control" placeholder="Type your comment here..." aria-label="Recipient's username" aria-describedby="button-addon2"> 
+            <a id="addCommentButton" class="btn btn-danger" type="button" id="button-addon2">
+                <i class="fa-solid fa-paper-plane"></i>
+            </a> 
+        </div> 
+    </div> 
+    <div id="ActivityLog" class="container-fluid h-100" style=""> 
+        <!-- The activity log and comments will be populated here by the JavaScript code -->
+    </div> 
+</div>
+let currentUser;
+let activityLog;
+
+// Fetching current user's information from SharePoint
+SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function() {
+    let context = new SP.ClientContext.get_current();
+    let web = context.get_web();
+    currentUser = web.get_currentUser();
+    currentUser.retrieve();
+    context.load(web);
+    context.executeQueryAsync(onQuerySucceeded, onQueryFailed);
+});
+
+function onQuerySucceeded() {
+    let username = currentUser.get_title();
+    console.log('Current user: ' + username);
+}
+
+function onQueryFailed(sender, args) {
+    console.error('Request failed. ' + args.get_message());
+}
+
+// Creating a card
+function createCard(type, user, content, timestamp) {
+    let activityType, activityIcon;
+
+    switch (type) {
+        case "comment":
+            activityType = "commented";
+            activityIcon = "fa-circle-user";
+            break;
+        case "create":
+            activityType = "created this request";
+            activityIcon = "fa-add";
+            break;
+        case "modify":
+            activityType = "modified this request";
+            activityIcon = "fa-pen";
+            break;
+    }
+
+    let card = `<div class="card border-0 activityItemCard ${type}Card my-2 p-1" style="width: 100%">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-2 px-2">
+                                <div class="activityIcon">
+                                    <span><i class="fa-solid fa-${activityIcon}"></i></span>
+                                </div>
+                            </div>
+                            <div class="col-10 textActivityContent">
+                                <div class="row">
+                                    <div class="activity-summary">
+                                        <b>${user}</b> ${activityType}
+                                    </div>
+                                    <div id="ActivityMessageContent" class="activity-msg-content">
+                                        ${content}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div id="ActivityTimeStamp" class="activity-timestamp">
+                                        ${timestamp}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+    return card;
+}
+
+// Adding a new comment
+function addComment(comment) {
+    // Get current time
+    let timestamp = new Date();
+    // Get user's display name
+    let username = currentUser.get_title();
+
+    // Create a new card for this comment
+    let newCard = createCard("comment", username, comment, timestamp);
+
+    // Append the new card to the activity log
+    $("#ActivityLog").append(newCard);
+
+    // Update SharePoint List
+    let listName = "<<Your List Name>>";
+    let siteUrl = "<<Your Site URL>>";
+    let clientContext = new SP.ClientContext(siteUrl);
+    let oList = clientContext.get_web().get_lists().getByTitle(listName);
+
+    let camlQuery = new SP.CamlQuery();
+    camlQuery.set_viewXml('<View><Query><Where><Eq><FieldRef Name=\'Title\'/><Value Type=\'Text\'>New Comment</Value></Eq></Where></Query></View>');
+    this.collListItem = oList.getItems(camlQuery);
+
+    clientContext.load(collListItem);
+    clientContext.executeQueryAsync(Function.createDelegate(this, this.onQuerySucceeded), Function.createDelegate(this, this.onQueryFailed));        
+}
+
+function onQuerySucceeded(sender, args) {
+    let listItemEnumerator = collListItem.getEnumerator();
+
+    while (listItemEnumerator.moveNext()) {
+        let oListItem = listItemEnumerator.get_current();
+
+        let commentHistory = oListItem.get_item('<<Your Field Name>>');
+        oListItem.set_item('<<Your Field Name>>', commentHistory + '\n' + currentUser.get_title() + ': ' + comment);
+
+        oListItem.update();
+
+        clientContext.executeQueryAsync(Function.createDelegate(this, this.onUpdateSucceeded), Function.createDelegate(this, this.onQueryFailed));
+    }
+}
+
+function onUpdateSucceeded() {
+    console.log('Comment has been added successfully.');
+}
+
+// Binding click event to the comment button
+$("#addCommentButton").on("click", function() {
+    let comment = $(".form-control").val();
+    if (comment) {
+        addComment(comment);
+        // Clear the input field after adding the comment
+        $(".form-control").val('');
+    }
+});
