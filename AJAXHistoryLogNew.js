@@ -117,7 +117,7 @@ $(document).ready(function() {
     function populateActivityLog() {
       let currentItemID = getQueryStringParameter("ID");
       $.ajax({
-        url: siteUrl + "/_api/web/lists/GetByTitle('" + listName + "')/items(" + currentItemID + ")",
+        url: siteUrl + "/_api/web/lists/GetByTitle('" + listName + "')/items(" + currentItemID + ")?$select=HistoryLog,Author/Id,Author/Title&$expand=Author",
         method: "GET",
         headers: {
           "Accept": "application/json; odata=verbose"
