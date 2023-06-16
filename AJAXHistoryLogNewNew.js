@@ -96,11 +96,7 @@ $(document).ready(function() {
         url: `${siteUrl}/_api/web/lists/getByTitle('${listName}')/items(${currentItemID})`,
         method: "GET",
         headers: {
-            "Accept": "application/json;odata=verbose",
-            "Content-Type": "application/json;odata=verbose",
-            "X-RequestDigest": $("#__REQUESTDIGEST").val(),
-            "X-HTTP-Method": "MERGE",
-            "If-Match": "*"
+          Accept: "application/json; odata=verbose",
         },
         success: function(data) {
           let item = data.d;
@@ -132,11 +128,9 @@ $(document).ready(function() {
             url: `${siteUrl}/_api/web/lists/getByTitle('${listName}')/items(${currentItemID})`,
             method: "POST",
             headers: {
-                "Accept": "application/json;odata=verbose",
-                "Content-Type": "application/json;odata=verbose",
-                "X-RequestDigest": $("#__REQUESTDIGEST").val(),
-                "X-HTTP-Method": "MERGE",
-                "If-Match": "*"
+              Accept: "application/json;odata=verbose",
+              "Content-Type": "application/json;odata=verbose",
+              "X-RequestDigest": $("#__REQUESTDIGEST").val(),
             },
             data: JSON.stringify(item),
             success: function() {
@@ -231,3 +225,4 @@ $(document).ready(function() {
     /* Call populateActivityLog when page loads */
     populateActivityLog();
   });
+  
