@@ -175,3 +175,54 @@ $(document).ready(function () {
     /* Call populateActivityLog when page loads */
     populateActivityLog();
 });
+
+
+function addComment(comment) {
+    let timestamp = new Date();
+    let username = currentUser.get_title();
+    let currentUserId = currentUser.get_id(); // Get current user's ID
+    let currentItemID = getQueryStringParameter("ID");
+    let newCard = createCard("comment", username, comment, timestamp);
+    $("#ActivityLog").append(newCard);
+
+    let listName = "PurchaseRequests";
+    let siteUrl = "https://sp.bbh.com/sites/ESPurchasing";
+    let clientContext = new SP.ClientContext(siteUrl);
+    let oList = clientContext.get_web().get_lists().getByTitle(listName);
+    let camlQuery = new SP.CamlQuery();
+    camlQuery.set_viewXml(`<View><Query><Where><Eq><FieldRef Name='ID'/><Value Type='Counter'>${currentItemID}</Value></Eq></Where></Query></View>`);
+
+    collListItem = oList.getItems(camlQuery);
+    clientContext.load(collListItem);
+    clientContext.executeQueryAsync(Function.createDelegate(this, onQuerySucceeded), Function.createDelegate(this, onQueryFailed));
+
+    function onQuerySucceeded(sender, args) {
+        let listItemEnumerator = collListItem.getEnumerator();
+        while (listItemEnumerator.moveNext()) {
+            let oListItem = listItemEnumerator.get_current();
+            let commentHistory = oListItem.get_item('HistoryLog');
+            let authorId = oListItem.get_item('Author').get_lookupId(); // Get author's ID
+
+            commentHistory = commentHistory ? commentHistory + '\n' + currentUser.get_title() + ': ' + comment : currentUser.get_title() + ': ' + comment;
+
+            oListItem.set_item('HistoryLog', commentHistory);
+            oListItem.set_item('NewComment1', comment); // Update NewComment1 field
+
+            if (currentUserId != authorId) { // Check if current user is not the author
+                oListItem.set_item('IsSendMessageToRequestor', true); // Set IsSendMessageToRequestor to Yes
+            }
+
+            oListItem.update();
+        }
+
+        clientContext.executeQueryAsync(Function.createDelegate(this, onUpdateSucceeded), Function.createDelegate(this, onQueryFailed));
+    }
+
+    function onUpdateSucceeded() {
+        console.log('Comment has been added successfully.');
+    }
+
+    function onQueryFailed(sender, args) {
+        console.error('Request failed. ' + args.get_message());
+    }
+}
