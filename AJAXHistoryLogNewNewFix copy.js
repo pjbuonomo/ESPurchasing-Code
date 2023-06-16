@@ -110,7 +110,7 @@ $(document).ready(function () {
     let currentItemID = getQueryStringParameter("ID");
     let listName = "PurchaseRequests";
     let siteUrl = "https://sp.bbh.com/sites/ESPurchasing";
-
+  
     $.ajax({
       url: `${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${currentItemID})/FieldValuesAsText`,
       type: "GET",
@@ -146,6 +146,7 @@ $(document).ready(function () {
       }
     });
   }
+  
 
   $("#addCommentButton").on("click", function () {
     let comment = $(".form-control").val();
