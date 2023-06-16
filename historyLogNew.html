@@ -360,3 +360,77 @@ function populateActivityLog() {
     }
     /* The rest of the SharePoint code... */
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Function to populate activity log when page loads */
+function populateActivityLog() {
+    let currentItemID = getQueryStringParameter("ID");
+    let listName = "PurchaseRequests";
+    let siteUrl = "https://sp.bbh.com/sites/ESPurchasing";
+    let clientContext = new SP.ClientContext(siteUrl);
+    let oList = clientContext.get_web().get_lists().getByTitle(listName);
+    let camlQuery = new SP.CamlQuery();
+    camlQuery.set_viewXml(`<View><Query><Where><Eq><FieldRef Name='ID'/><Value Type='Counter'>${currentItemID}</Value></Eq></Where></Query></View>`);
+    collListItem = oList.getItems(camlQuery);
+    clientContext.load(collListItem);
+    clientContext.executeQueryAsync(Function.createDelegate(this, onQuerySucceeded), Function.createDelegate(this, onQueryFailed));
+
+    function onQuerySucceeded(sender, args) {
+        let listItemEnumerator = collListItem.getEnumerator();
+        while (listItemEnumerator.moveNext()) {
+            let oListItem = listItemEnumerator.get_current();
+            let commentHistory = oListItem.get_item('HistoryLog');
+            if (commentHistory) {
+                let comments = commentHistory.split('|||');
+                comments.forEach(function(comment) {
+                    let splitIndex = comment.lastIndexOf(':');
+                    let timeIndex = comment.lastIndexOf(' at ');
+                    let user = comment.substring(0, splitIndex);
+                    let content = comment.substring(splitIndex + 1, timeIndex);
+                    let timestamp = comment.substring(timeIndex + 4);
+                    let newCard = createCard("comment", user, content, timestamp);
+                    $("#ActivityLog").append(newCard);
+                });
+            }
+        }
+    }
+
+    function onQueryFailed(sender, args) {
+        console.error('Request failed. ' + args.get_message());
+    }
+}
