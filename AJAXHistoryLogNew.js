@@ -115,44 +115,32 @@ $(document).ready(function() {
   
     /* Function to populate activity log when page loads */
     function populateActivityLog() {
-      let currentItemID = getQueryStringParameter("ID");
-      $.ajax({
-        url: siteUrl + "/_api/web/lists/GetByTitle('" + listName + "')/items(" + currentItemID + ")?$select=HistoryLog,Author/Id,Author/Title&$expand=Author",
-        method: "GET",
-        headers: {
-          "Accept": "application/json; odata=verbose"
-        },
-        success: function(data) {
-          let commentHistory = data.d.HistoryLog;
-          if (commentHistory) {
-            let comments = commentHistory.split('\n');
-            comments.forEach(function(comment) {
-              let user, timestamp, content;
-              let userEndIndex = comment.indexOf(' (');
-              if (userEndIndex !== -1) {
-                user = comment.substring(0, userEndIndex);
-              }
-              let timestampStartIndex = comment.indexOf('(');
-              let timestampEndIndex = comment.indexOf(')');
-              if (timestampStartIndex !== -1 && timestampEndIndex !== -1) {
-                timestamp = comment.substring(timestampStartIndex + 1, timestampEndIndex);
-              }
-              let commentStartIndex = comment.indexOf('):');
-              if (commentStartIndex !== -1) {
-                content = comment.substring(commentStartIndex + 2).trim();
-              }
-              if (user && timestamp && content) {
+        let currentItemID = getQueryStringParameter("ID");
+        $.ajax({
+          url: siteUrl + "/_api/web/lists/GetByTitle('" + listName + "')/items(" + currentItemID + ")?$select=HistoryLog,Author/Id,Author/Title&$expand=Author",
+          method: "GET",
+          headers: {
+            "Accept": "application/json; odata=verbose"
+          },
+          success: function(data) {
+            let commentHistory = data.d.HistoryLog;
+            if (commentHistory) {
+              let regex = /(.+?) \((.+?)\):\s*(.+)/g;
+              let match;
+              while ((match = regex.exec(commentHistory)) !== null) {
+                let user = match[1];
+                let timestamp = match[2];
+                let content = match[3];
                 let newCard = createCard("comment", user, content, timestamp);
                 $("#ActivityLog").prepend(newCard);
               }
-            });
+            }
+          },
+          error: function(error) {
+            console.error('Request failed. ' + JSON.stringify(error));
           }
-        },
-        error: function(error) {
-          console.error('Request failed. ' + JSON.stringify(error));
-        }
-      });
-    }
+        });
+      }
   
     /* Binding click event to the comment button */
     $("#addCommentButton").on("click", function() {
