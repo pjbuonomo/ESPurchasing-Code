@@ -131,10 +131,10 @@ $(document).ready(function() {
             url: `${siteUrl}/_api/web/lists/getByTitle('${listName}')/items(${currentItemID})`,
             method: "POST",
             headers: {
-              Accept: "application/json; odata=verbose",
-              "Content-Type": "application/json; odata=verbose",
-              "X-HTTP-Method": "MERGE",
-              "IF-MATCH": "*",
+                "Accept": "application/json;odata=verbose",
+                "X-RequestDigest": $("#__REQUESTDIGEST").val(),
+                "X-HTTP-Method": "MERGE",
+                "If-Match": "*"
             },
             data: JSON.stringify(item),
             success: function() {
