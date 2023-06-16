@@ -112,7 +112,7 @@ $(document).ready(function () {
     let siteUrl = "https://sp.bbh.com/sites/ESPurchasing";
 
     $.ajax({
-      url: siteUrl + "/_api/web/lists/getbytitle('" + listName + "')/items(" + currentItemID + ")",
+      url: `${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${currentItemID})/FieldValuesAsText`,
       type: "GET",
       headers: { "Accept": "application/json;odata=verbose" },
       success: function (data) {
